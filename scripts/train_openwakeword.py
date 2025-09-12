@@ -12,30 +12,25 @@ def estimate_arena(path):
     except:
         return None
 
+def download_file(url, path):
+    """Hilfsfunktion: Datei herunterladen, falls fehlt."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        subprocess.check_call(["wget", "-O", path, url])
+
 def download_rirs():
     """Lädt RIRs für realistische Raumakustik herunter."""
-    os.makedirs("./mit_rirs", exist_ok=True)
-    subprocess.check_call(["git", "lfs", "install"])
-    subprocess.check_call([
-        "git", "clone", "--depth", "1",
-        "https://huggingface.co/datasets/davidscripka/MIT_environmental_impulse_responses",
-        "temp_rir"
-    ])
-    for f in os.listdir("temp_rir/16khz"):
-        shutil.copy(os.path.join("temp_rir/16khz", f), "./mit_rirs/")
-    shutil.rmtree("temp_rir")
-
-def download_piper_model():
-    """Lädt das Piper TTS Modell herunter."""
-    model_path = "piper-sample-generator/models/en_US-libritts_r-medium.pt"
-    if not os.path.exists(model_path):
-        os.makedirs("piper-sample-generator/models", exist_ok=True)
+    if not os.path.exists("./mit_rirs"):
+        os.makedirs("./mit_rirs", exist_ok=True)
+        subprocess.check_call(["git", "lfs", "install"])
         subprocess.check_call([
-            "wget",
-            "-O", model_path,
-            "https://github.com/rhasspy/piper-sample-generator/releases/download/v2.0.0/en_US-libritts_r-medium.pt"
+            "git", "clone", "--depth", "1",
+            "https://huggingface.co/datasets/davidscripka/MIT_environmental_impulse_responses",
+            "temp_rir"
         ])
-    return model_path
+        for f in os.listdir("temp_rir/16khz"):
+            shutil.copy(os.path.join("temp_rir/16khz", f), "./mit_rirs/")
+        shutil.rmtree("temp_rir")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -43,11 +38,29 @@ def main():
     args = parser.parse_args()
     wake_word = args.wake_word.replace(" ", "_")
 
-    # Alle Abhängigkeiten sicherstellen
-    download_piper_model()
+    # 1️⃣ Piper TTS Modell
+    download_file(
+        "https://github.com/rhasspy/piper-sample-generator/releases/download/v2.0.0/en_US-libritts_r-medium.pt",
+        "piper-sample-generator/models/en_US-libritts_r-medium.pt"
+    )
+
+    # 2️⃣ RIRs
     download_rirs()
 
-    # Base config laden
+    # 3️⃣ ACAV100M Features
+    download_file(
+        "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/openwakeword_features_ACAV100M_2000_hrs_16bit.npy",
+        "openwakeword_features_ACAV100M_2000_hrs_16bit.npy"
+    )
+
+    # 4️⃣ Optional: Validation Features
+    if not os.path.exists("validation_set_features.npy"):
+        download_file(
+            "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/validation_set_features.npy",
+            "validation_set_features.npy"
+        )
+
+    # 5️⃣ Load base config
     base_cfg = yaml.safe_load(open("openwakeword/examples/custom_model.yml"))
 
     # Wake Word konfigurieren
@@ -59,12 +72,12 @@ def main():
     base_cfg["output_dir"] = "./my_custom_model"
     base_cfg["rir_paths"] = ["./mit_rirs"]
 
-    # Optional: Backgroundpfade prüfen
+    # Background Pfade prüfen
     bg_paths = ["./audioset_16k", "./fma"]
     existing_bg_paths = [p for p in bg_paths if os.path.exists(p)]
     base_cfg["background_paths"] = existing_bg_paths
 
-    # Optional: FP validation data nur verwenden, wenn vorhanden
+    # FP validation
     if os.path.exists("validation_set_features.npy"):
         base_cfg["false_positive_validation_data_path"] = "validation_set_features.npy"
 
