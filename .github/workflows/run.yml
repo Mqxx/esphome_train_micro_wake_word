@@ -65,19 +65,19 @@ jobs:
           python scripts/train_openwakeword.py --wake_word "${{ github.event.inputs.wake_word }}"
 
       - name: Upload trained model
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wakeword-model
           path: my_custom_model/*.tflite
 
       - name: Upload tensor arena size
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tensor-arena-size
           path: output/tensor_arena_size.txt
 
       - name: Upload metadata
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: metadata
           path: output/metadata.json
