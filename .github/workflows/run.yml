@@ -36,13 +36,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install torch torchvision torchaudio
           pip install piper-tts piper-phonemize-cross webrtcvad
-          pip install "torch<=2.5" torchvision torchaudio
-          pip install mutagen==1.47.0 torchinfo==1.8.0 torchmetrics==1.2.0 speechbrain==0.5.14
-          pip install audiomentations==0.33.0 torch-audiomentations==0.11.0 acoustics==0.2.6
-          pip install onnx onnx2tf onnxruntime onnxsim onnx_graphsurgeon sng4onnx
-          pip install ai_edge_litert==1.4.0 pronouncing==0.2.0 datasets==2.14.6 deep-phonemizer==0.0.19
-          pip install numpy scipy tqdm pyyaml
+          pip install onnx onnxruntime onnxsim onnx2tf ai_edge_litert==1.4.0
+          pip install numpy scipy tqdm datasets mutagen torchinfo torchmetrics speechbrain \
+                      audiomentations torch-audiomentations acoustics pronouncing deep-phonemizer
+          pip install tensorflow==2.13.0  # <--- hinzufügen
+          pip install pyyaml
 
       - name: Clone openwakeword
         run: |
