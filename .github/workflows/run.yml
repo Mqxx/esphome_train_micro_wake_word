@@ -19,21 +19,14 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.10"   # stabiler für TF + PyTorch
 
       - name: Install system deps
         run: |
           sudo apt-get update
           sudo apt-get install -y libsndfile1 sox git-lfs
 
-      - name: Clone piper-sample-generator
-        run: |
-          git clone https://github.com/rhasspy/piper-sample-generator
-          cd piper-sample-generator && git checkout 213d4d5
-          wget -O en_US-libritts_r-medium.pt \
-            https://github.com/rhasspy/piper-sample-generator/releases/download/v2.0.0/en_US-libritts_r-medium.pt
-
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install --upgrade typing_extensions
@@ -46,6 +39,13 @@ jobs:
           pip install mutagen==1.47.0 torchinfo==1.8.0 torchmetrics==1.2.0 speechbrain==0.5.14
           pip install audiomentations==0.33.0 torch-audiomentations==0.11.0 acoustics==0.2.6
           pip install pronouncing==0.2.0 datasets==2.14.6 deep-phonemizer==0.0.19
+
+      - name: Clone piper-sample-generator
+        run: |
+          git clone https://github.com/rhasspy/piper-sample-generator
+          cd piper-sample-generator && git checkout 213d4d5
+          wget -O en_US-libritts_r-medium.pt \
+            https://github.com/rhasspy/piper-sample-generator/releases/download/v2.0.0/en_US-libritts_r-medium.pt
 
       - name: Clone openwakeword
         run: |
@@ -60,18 +60,24 @@ jobs:
           wget https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/melspectrogram.onnx -O openwakeword/openwakeword/resources/models/melspectrogram.onnx
           wget https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/melspectrogram.tflite -O openwakeword/openwakeword/resources/models/melspectrogram.tflite
 
-      - name: Run training pipeline
+      - name: Run training
         run: |
           python scripts/train_openwakeword.py --wake_word "${{ github.event.inputs.wake_word }}"
 
       - name: Upload trained model
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: wakeword-model
           path: my_custom_model/*.tflite
 
       - name: Upload tensor arena size
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: tensor-arena-size
           path: output/tensor_arena_size.txt
+
+      - name: Upload metadata
+        uses: actions/upload-artifact@v3
+        with:
+          name: metadata
+          path: output/metadata.json
