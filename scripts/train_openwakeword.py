@@ -15,7 +15,9 @@ def estimate_arena(path):
 def download_file(url, path):
     """Hilfsfunktion: Datei herunterladen, falls fehlt."""
     if not os.path.exists(path):
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        dir_name = os.path.dirname(path)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
         subprocess.check_call(["wget", "-O", path, url])
 
 def download_rirs():
@@ -54,11 +56,10 @@ def main():
     )
 
     # 4️⃣ Optional: Validation Features
-    if not os.path.exists("validation_set_features.npy"):
-        download_file(
-            "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/validation_set_features.npy",
-            "validation_set_features.npy"
-        )
+    download_file(
+        "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/validation_set_features.npy",
+        "validation_set_features.npy"
+    )
 
     # 5️⃣ Load base config
     base_cfg = yaml.safe_load(open("openwakeword/examples/custom_model.yml"))
