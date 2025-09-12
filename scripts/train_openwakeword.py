@@ -16,12 +16,26 @@ def download_rirs():
     """Lädt RIRs für realistische Raumakustik herunter."""
     os.makedirs("./mit_rirs", exist_ok=True)
     subprocess.check_call(["git", "lfs", "install"])
-    subprocess.check_call(["git", "clone", "--depth", "1",
-                           "https://huggingface.co/datasets/davidscripka/MIT_environmental_impulse_responses",
-                           "temp_rir"])
+    subprocess.check_call([
+        "git", "clone", "--depth", "1",
+        "https://huggingface.co/datasets/davidscripka/MIT_environmental_impulse_responses",
+        "temp_rir"
+    ])
     for f in os.listdir("temp_rir/16khz"):
         shutil.copy(os.path.join("temp_rir/16khz", f), "./mit_rirs/")
     shutil.rmtree("temp_rir")
+
+def download_piper_model():
+    """Lädt das Piper TTS Modell herunter."""
+    model_path = "piper-sample-generator/models/en_US-libritts_r-medium.pt"
+    if not os.path.exists(model_path):
+        os.makedirs("piper-sample-generator/models", exist_ok=True)
+        subprocess.check_call([
+            "wget",
+            "-O", model_path,
+            "https://github.com/rhasspy/piper-sample-generator/releases/download/v2.0.0/en_US-libritts_r-medium.pt"
+        ])
+    return model_path
 
 def main():
     parser = argparse.ArgumentParser()
@@ -29,7 +43,8 @@ def main():
     args = parser.parse_args()
     wake_word = args.wake_word.replace(" ", "_")
 
-    # RIRs herunterladen
+    # Alle Abhängigkeiten sicherstellen
+    download_piper_model()
     download_rirs()
 
     # Base config laden
@@ -44,7 +59,7 @@ def main():
     base_cfg["output_dir"] = "./my_custom_model"
     base_cfg["rir_paths"] = ["./mit_rirs"]
 
-    # Optional: Hintergrundpfade prüfen
+    # Optional: Backgroundpfade prüfen
     bg_paths = ["./audioset_16k", "./fma"]
     existing_bg_paths = [p for p in bg_paths if os.path.exists(p)]
     base_cfg["background_paths"] = existing_bg_paths
