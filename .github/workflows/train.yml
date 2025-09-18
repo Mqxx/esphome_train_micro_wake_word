@@ -1,34 +1,37 @@
-name: Notebook ausführen
+name: Train Wake Word
 
-on: 
-  workflow_dispatch: {}
+on:
+  workflow_dispatch:
+    inputs:
+      wake_word:
+        type: string
+        required: true
+
+      model_name:
+        type: string
+        required: true
 
 jobs:
-  run_notebook:
+  train:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Repository auschecken
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Python einrichten
-        uses: actions/setup-python@v3
-        with:
-          python-version: '3.9'
-
-      - name: Abhängigkeiten installieren
+      - name: Run training container
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          mkdir -p ${{ github.workspace }}/out
+          
+          docker run \
+            -v ${{ github.workspace }}/out:/out \
+            helvio/mww \
+            --train \
+            --wake-word "${{ inputs.wake_word }}" \
+            --model-name ${{ inputs.model_name }}
 
-      - name: Notebook ausführen
-        uses: yaananth/run-notebook@v2
-        with:
-          notebook: 'notebooks/basic_training_notebook.ipynb'
-          isReport: false
-
-      - name: Artefakte hochladen
+      - name: Upload trained model
         uses: actions/upload-artifact@v3
         with:
-          name: notebook-output
-          path: ${{ runner.temp }}/nb-runner
+          name: glados-model
+          path: ${{ github.workspace }}/out
