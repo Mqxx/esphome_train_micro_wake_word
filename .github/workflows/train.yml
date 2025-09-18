@@ -1,9 +1,9 @@
-name: Train Wake Word
+name: Train Micro Wake Word
 
 on:
   workflow_dispatch:
     inputs:
-      wake_word:
+      micro_wake_word:
         type: string
         required: true
 
@@ -27,7 +27,7 @@ jobs:
             -v ${{ github.workspace }}/out:/out \
             helvio/mww \
             --train \
-            --wake-word "${{ inputs.wake_word }}" \
+            --wake-word "${{ inputs.micro_wake_word }}" \
             --model-name ${{ inputs.model_name }}
 
       - name: Upload trained model
