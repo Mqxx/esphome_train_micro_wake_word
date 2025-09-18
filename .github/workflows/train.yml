@@ -33,5 +33,5 @@ jobs:
       - name: Upload trained model
         uses: actions/upload-artifact@v4
         with:
-          name: glados-model
+          name: model
           path: ${{ github.workspace }}/out
